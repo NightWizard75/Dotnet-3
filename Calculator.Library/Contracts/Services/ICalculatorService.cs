@@ -1,6 +1,6 @@
 using Calculator.Library.Models;
 
-namespace Calculator.Library.Services;
+namespace Calculator.Library.Contracts.Services;
 
 public interface ICalculatorService
 {

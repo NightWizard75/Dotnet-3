@@ -2,5 +2,7 @@ namespace Calculator.Library.Configuration;
 
 public class CalculatorOptions
 {
-    // конфигурационный класс: CalculatorOptions (MaxValue: double, Precision: int, AllowNegativeResults: bool)
+    public double MaxValue { get; init; } = double.MaxValue;
+    public int Precision { get; init; } = 15;
+    public bool AllowNegativeResults { get; init; } = true;
 }

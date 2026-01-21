@@ -1,6 +1,11 @@
+using System.Globalization;
+
 namespace Calculator.Library.Models;
 
-public class CalculationResult
+public class CalculationResult(double value)
 {
-    // - CalculationResult (результат вычисления с свойством double Value)
+    public double Value { get; } = value;
+
+    public override string ToString() =>
+        Value.ToString(CultureInfo.CurrentCulture);
 }
