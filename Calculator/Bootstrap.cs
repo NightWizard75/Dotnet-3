@@ -6,12 +6,38 @@ using Serilog;
 using Calculator.Library.Configuration;
 using Calculator.Library.Contracts.Services;
 using Calculator.Library.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Hosting;
 
 namespace Calculator;
 
 public static class Bootstrap
 {
-    public static IServiceProvider Initialize()
+    public static IHost Initialize(string[]? args)
+    {
+        var builder = Host.CreateApplicationBuilder(args);
+
+        // === 1. Создание логгера ===
+        var logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(builder.Configuration)  // чтение из appsettings.json
+            .CreateLogger();
+
+        // === 2. Регистрация опций ===
+        builder.Services.Configure<CalculatorOptions>(
+            builder.Configuration.GetSection("Calculator")
+        );
+
+        // === 3. Регистрация сервисов ===
+        builder.Services.AddSingleton<ICalculatorService, CalculatorService>();
+        builder.Services.AddSingleton<CalculatorRunner>();
+        
+        // dispose: true — гарантирует вызов CloseAndFlush() при завершении хоста
+        builder.Services.AddSerilog(logger, dispose: true);
+
+        return builder.Build();
+    }
+    
+    public static IServiceProvider InitializeByServiceProvider()
     {
         // === 1. Загрузка конфигурации ===
         var config = new ConfigurationBuilder()
@@ -45,7 +71,31 @@ public static class Bootstrap
 
         return services.BuildServiceProvider();
     }
+    
+    public static IServiceProvider InitializeByWebApplication()
+    {
+        
+        var builder = WebApplication.CreateBuilder();
+        
+        builder.Services.Configure<CalculatorOptions>(builder.Configuration.GetSection("Calculator"));
+        builder.Services.AddScoped<ICalculatorService, CalculatorService>();
+        builder.Services.AddScoped<CalculatorRunner>();
+        builder.Host.UseSerilog((context, services, loggerConfiguration) =>
+        {
+            loggerConfiguration
+                .WriteTo.Console()
+                .MinimumLevel.Debug();
+        });
+        
+        return builder.Build().Services;
+    }
 
+    /// <summary>
+    /// Метод необходим для корректного завершения глобального логгера.
+    /// Но он не нужен при использовании
+    /// Host.CreateApplicationBuilder()
+    /// builder.Services.AddSerilog(logger, dispose: true);
+    /// </summary>
     public static void Shutdown()
     {
         Log.CloseAndFlush();

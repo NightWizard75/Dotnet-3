@@ -6,22 +6,22 @@
 
 using Calculator;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Calculator.Library.Contracts.Services;
+using Microsoft.Extensions.Logging;
 using Serilog;
 
 
 try
 {
     // Настройка вынесена в Bootstrap
-    var serviceProvider = Bootstrap.Initialize();
-    var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
-    var runner = serviceProvider.GetRequiredService<CalculatorRunner>();
+    using var host = Bootstrap.Initialize(args);
+    var runner = host.Services.GetRequiredService<CalculatorRunner>();
     
+    var logger = host.Services.GetRequiredService<ILogger<Program>>();
     logger.LogInformation("Запуск приложения...");
     
     // Ручные запуски
-    CalculatorManualCalls(serviceProvider);
+    CalculatorManualCalls(host.Services);
     
     // Интерактивный режим
     runner.RunInteractive();
@@ -33,7 +33,7 @@ catch (Exception ex)
 }
 finally
 {
-    Bootstrap.Shutdown();
+    Log.CloseAndFlush();
 }
 
 return 0;
